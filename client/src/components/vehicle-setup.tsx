@@ -5,20 +5,22 @@ import { Label } from "@/components/ui/label";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { vehicleDataSchema, type VehicleData } from "@shared/schema";
+import { vehicleDataSchema, type VehicleData, type Vehicle } from "@shared/schema";
 import { Car, Gauge, Leaf, Fuel, X, Save } from "lucide-react";
 
 interface VehicleSetupProps {
   isVisible: boolean;
   onClose: () => void;
   onSave: (data: VehicleData) => void;
-  initialData?: VehicleData;
+  initialData?: Vehicle;
+  isEditing?: boolean;
 }
 
-export function VehicleSetup({ isVisible, onClose, onSave, initialData }: VehicleSetupProps) {
+export function VehicleSetup({ isVisible, onClose, onSave, initialData, isEditing }: VehicleSetupProps) {
   const form = useForm<VehicleData>({
     resolver: zodResolver(vehicleDataSchema),
     defaultValues: initialData || {
+      nome: "",
       gasolinaConsumo: 0,
       etanolConsumo: 0,
       capacidadeTanque: 0,
@@ -38,7 +40,7 @@ export function VehicleSetup({ isVisible, onClose, onSave, initialData }: Vehicl
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-lg font-medium text-gray-800 flex items-center">
             <Car className="text-primary mr-2" size={20} />
-            Dados do Veículo
+            {isEditing ? 'Editar Veículo' : 'Novo Veículo'}
           </h2>
           <Button
             variant="ghost"
@@ -53,6 +55,29 @@ export function VehicleSetup({ isVisible, onClose, onSave, initialData }: Vehicl
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+            <FormField
+              control={form.control}
+              name="nome"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="flex items-center text-sm font-medium text-gray-700">
+                    <Car className="text-primary mr-1" size={16} />
+                    Nome do Veículo
+                  </FormLabel>
+                  <FormControl>
+                    <Input
+                      {...field}
+                      type="text"
+                      placeholder="Ex: Honda Civic 2020"
+                      className="text-lg py-3"
+                      data-testid="input-nome-veiculo"
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
             <FormField
               control={form.control}
               name="gasolinaConsumo"

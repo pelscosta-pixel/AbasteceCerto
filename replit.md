@@ -1,6 +1,6 @@
 # Overview
 
-This is a full-stack fuel efficiency calculator application built with React and Express. The app helps users determine whether gasoline or ethanol is more cost-effective based on their vehicle's consumption rates and current fuel prices. It features a mobile-first design with a clean, intuitive interface for vehicle setup, price input, and calculation results.
+This is a full-stack fuel efficiency calculator application built with React and Express. The app helps users manage multiple vehicles and determine whether gasoline or ethanol is more cost-effective based on each vehicle's consumption rates and current fuel prices. It features a mobile-first design with database storage for multiple named vehicles, vehicle selection interface, and quick price calculation workflow.
 
 # User Preferences
 
@@ -36,12 +36,13 @@ The server is built with Node.js and Express in a minimal REST API pattern:
 The backend uses a storage abstraction pattern that allows easy switching between in-memory and database storage implementations.
 
 ## Data Storage
-Currently uses in-memory storage with plans for database integration:
+Uses PostgreSQL database with Drizzle ORM for vehicle management:
 
-- **Development Storage**: MemStorage class implementing IStorage interface
-- **Database Ready**: Drizzle ORM configured for PostgreSQL with Neon Database
-- **Schema Management**: Centralized schema definitions in shared directory
+- **Production Storage**: DatabaseStorage class with PostgreSQL backend via Neon Database
+- **Vehicle Management**: Full CRUD operations for multiple named vehicles
+- **Schema Management**: Centralized schema definitions in shared directory with Drizzle tables
 - **Migrations**: Drizzle Kit for database schema management
+- **Data Persistence**: Vehicle data stored in database, calculations performed in real-time
 
 ## Data Validation and Schemas
 Shared validation schemas using Zod ensure type safety across the full stack:

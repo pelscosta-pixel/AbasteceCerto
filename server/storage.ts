@@ -1,42 +1,45 @@
-import { type VehicleData, type PriceInput, type CalculationResult } from "@shared/schema";
+import { vehicles, type Vehicle, type InsertVehicle } from "@shared/schema";
+import { db } from "./db";
+import { eq } from "drizzle-orm";
 
-// Storage interface for fuel calculator app
 export interface IStorage {
-  // For now, we'll use localStorage on frontend for persistence
-  // This interface is kept minimal for potential future expansion
-  calculateFuel(vehicleData: VehicleData, prices: PriceInput): CalculationResult;
+  getVehicles(): Promise<Vehicle[]>;
+  getVehicle(id: number): Promise<Vehicle | undefined>;
+  createVehicle(insertVehicle: InsertVehicle): Promise<Vehicle>;
+  updateVehicle(id: number, insertVehicle: InsertVehicle): Promise<Vehicle>;
+  deleteVehicle(id: number): Promise<void>;
 }
 
-export class MemStorage implements IStorage {
-  constructor() {
-    // No persistent storage needed for calculations
+export class DatabaseStorage implements IStorage {
+  async getVehicles(): Promise<Vehicle[]> {
+    return db.select().from(vehicles).orderBy(vehicles.createdAt);
   }
 
-  calculateFuel(vehicleData: VehicleData, prices: PriceInput): CalculationResult {
-    const gasolinaCostPerKm = prices.precoGasolina / vehicleData.gasolinaConsumo;
-    const etanolCostPerKm = prices.precoEtanol / vehicleData.etanolConsumo;
-    
-    const bestFuel = etanolCostPerKm < gasolinaCostPerKm ? 'etanol' : 'gasolina';
-    const savingsPerKm = Math.abs(gasolinaCostPerKm - etanolCostPerKm);
-    
-    // Calculate savings per full tank based on average consumption
-    const avgConsumption = bestFuel === 'etanol' ? vehicleData.etanolConsumo : vehicleData.gasolinaConsumo;
-    const kmPerTank = vehicleData.capacidadeTanque * avgConsumption;
-    const savingsPerTank = savingsPerKm * kmPerTank;
-    
-    const maxCost = Math.max(gasolinaCostPerKm, etanolCostPerKm);
-    const minCost = Math.min(gasolinaCostPerKm, etanolCostPerKm);
-    const percentageDifference = ((maxCost - minCost) / maxCost) * 100;
-    
-    return {
-      bestFuel,
-      gasolinaCostPerKm,
-      etanolCostPerKm,
-      savingsPerTank,
-      percentageDifference,
-      reason: `${percentageDifference.toFixed(1)}% mais econômico`
-    };
+  async getVehicle(id: number): Promise<Vehicle | undefined> {
+    const [vehicle] = await db.select().from(vehicles).where(eq(vehicles.id, id));
+    return vehicle || undefined;
+  }
+
+  async createVehicle(insertVehicle: InsertVehicle): Promise<Vehicle> {
+    const [vehicle] = await db
+      .insert(vehicles)
+      .values(insertVehicle)
+      .returning();
+    return vehicle;
+  }
+
+  async updateVehicle(id: number, insertVehicle: InsertVehicle): Promise<Vehicle> {
+    const [vehicle] = await db
+      .update(vehicles)
+      .set(insertVehicle)
+      .where(eq(vehicles.id, id))
+      .returning();
+    return vehicle;
+  }
+
+  async deleteVehicle(id: number): Promise<void> {
+    await db.delete(vehicles).where(eq(vehicles.id, id));
   }
 }
 
-export const storage = new MemStorage();
+export const storage = new DatabaseStorage();

@@ -2,22 +2,69 @@ import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { VehicleSetup } from "@/components/vehicle-setup";
+import { VehicleSelector } from "@/components/vehicle-selector";
 import { PriceCalculator } from "@/components/price-calculator";
 import { ResultDisplay } from "@/components/result-display";
-import { useLocalStorage } from "@/hooks/use-local-storage";
-import { type VehicleData, type CalculationResult } from "@shared/schema";
+import { type Vehicle, type VehicleData, type CalculationResult } from "@shared/schema";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 import { Car, Fuel, Settings, Plus, Edit } from "lucide-react";
 
 type AppState = 'welcome' | 'setup' | 'calculator' | 'result';
 
 export default function Home() {
-  const [vehicleData, setVehicleData, removeVehicleData] = useLocalStorage<VehicleData | null>('vehicleData', null);
-  const [appState, setAppState] = useState<AppState>(vehicleData ? 'calculator' : 'welcome');
+  const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
+  const [appState, setAppState] = useState<AppState>('welcome');
   const [calculationResult, setCalculationResult] = useState<CalculationResult | null>(null);
+  const [editingVehicle, setEditingVehicle] = useState<Vehicle | null>(null);
+  
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  const createMutation = useMutation({
+    mutationFn: async (data: VehicleData) => {
+      const response = await fetch('/api/vehicles', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+      if (!response.ok) throw new Error('Failed to create vehicle');
+      return response.json();
+    },
+    onSuccess: (newVehicle) => {
+      queryClient.invalidateQueries({ queryKey: ['/api/vehicles'] });
+      setSelectedVehicle(newVehicle);
+      setAppState('calculator');
+      toast({ title: "Veículo criado com sucesso!" });
+    }
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: number, data: VehicleData }) => {
+      const response = await fetch(`/api/vehicles/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+      if (!response.ok) throw new Error('Failed to update vehicle');
+      return response.json();
+    },
+    onSuccess: (updatedVehicle) => {
+      queryClient.invalidateQueries({ queryKey: ['/api/vehicles'] });
+      setSelectedVehicle(updatedVehicle);
+      setEditingVehicle(null);
+      setAppState('calculator');
+      toast({ title: "Veículo atualizado com sucesso!" });
+    }
+  });
 
   const handleSaveVehicleData = (data: VehicleData) => {
-    setVehicleData(data);
-    setAppState('calculator');
+    if (editingVehicle) {
+      updateMutation.mutate({ id: editingVehicle.id, data });
+    } else {
+      createMutation.mutate(data);
+    }
   };
 
   const handleCalculationResult = (result: CalculationResult) => {
@@ -30,8 +77,23 @@ export default function Home() {
     setCalculationResult(null);
   };
 
-  const handleEditVehicle = () => {
+  const handleAddVehicle = () => {
+    setEditingVehicle(null);
     setAppState('setup');
+  };
+
+  const handleEditVehicle = (vehicle: Vehicle) => {
+    setEditingVehicle(vehicle);
+    setAppState('setup');
+  };
+
+  const handleVehicleSelect = (vehicle: Vehicle | null) => {
+    setSelectedVehicle(vehicle);
+    if (vehicle) {
+      setAppState('calculator');
+    } else {
+      setAppState('welcome');
+    }
   };
 
   return (
@@ -43,11 +105,11 @@ export default function Home() {
             <Fuel size={24} />
             <h1 className="text-xl font-medium">Combustível Inteligente</h1>
           </div>
-          {vehicleData && appState !== 'setup' && (
+          {selectedVehicle && appState !== 'setup' && (
             <Button
               variant="ghost"
               size="sm"
-              onClick={handleEditVehicle}
+              onClick={() => handleEditVehicle(selectedVehicle)}
               className="p-2 rounded-full hover:bg-white hover:bg-opacity-20 transition-colors text-white"
               data-testid="button-settings"
             >
@@ -59,7 +121,7 @@ export default function Home() {
 
       {/* Main Content */}
       <main className="p-4 space-y-6">
-        {/* Welcome Card */}
+        {/* Vehicle Selector */}
         {appState === 'welcome' && (
           <Card className="elevation-1 border-l-4 border-secondary" data-testid="welcome-card">
             <CardContent className="p-6">
@@ -67,61 +129,40 @@ export default function Home() {
                 <Car className="text-primary mx-auto" size={48} />
                 <h2 className="text-lg font-medium text-gray-800">Bem-vindo!</h2>
                 <p className="text-gray-600 text-sm">
-                  Configure primeiro os dados do seu veículo para começar a calcular qual combustível vale mais a pena.
+                  Selecione ou adicione um veículo para começar a calcular qual combustível vale mais a pena.
                 </p>
-                <Button
-                  onClick={() => setAppState('setup')}
-                  className="w-full py-3 font-medium elevation-1"
-                  data-testid="button-setup"
-                >
-                  <Plus className="mr-2" size={16} />
-                  Configurar Veículo
-                </Button>
               </div>
             </CardContent>
           </Card>
+        )}
+
+        {(appState === 'welcome' || appState === 'calculator') && (
+          <VehicleSelector
+            selectedVehicle={selectedVehicle}
+            onVehicleSelect={handleVehicleSelect}
+            onAddVehicle={handleAddVehicle}
+            onEditVehicle={handleEditVehicle}
+          />
         )}
 
         {/* Vehicle Setup */}
         <VehicleSetup
           isVisible={appState === 'setup'}
-          onClose={() => setAppState(vehicleData ? 'calculator' : 'welcome')}
+          onClose={() => setAppState(selectedVehicle ? 'calculator' : 'welcome')}
           onSave={handleSaveVehicleData}
-          initialData={vehicleData || undefined}
+          initialData={editingVehicle || undefined}
+          isEditing={!!editingVehicle}
         />
 
-        {/* Vehicle Info Card */}
-        {vehicleData && appState !== 'setup' && (
-          <Card className="elevation-1" data-testid="vehicle-info-card">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-3">
-                  <Car className="text-primary" size={18} />
-                  <div>
-                    <h3 className="font-medium text-gray-800">Seu Veículo</h3>
-                    <p className="text-sm text-gray-600" data-testid="text-vehicle-info">
-                      Gasolina: {vehicleData.gasolinaConsumo} km/l • Etanol: {vehicleData.etanolConsumo} km/l
-                    </p>
-                  </div>
-                </div>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={handleEditVehicle}
-                  className="p-2 text-gray-400 hover:text-primary transition-colors"
-                  data-testid="button-edit-vehicle"
-                >
-                  <Edit size={16} />
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
         {/* Price Calculator */}
-        {appState === 'calculator' && vehicleData && (
+        {appState === 'calculator' && selectedVehicle && (
           <PriceCalculator
-            vehicleData={vehicleData}
+            vehicleData={{
+              nome: selectedVehicle.nome,
+              gasolinaConsumo: selectedVehicle.gasolinaConsumo,
+              etanolConsumo: selectedVehicle.etanolConsumo,
+              capacidadeTanque: selectedVehicle.capacidadeTanque
+            }}
             onCalculate={handleCalculationResult}
           />
         )}
