@@ -8,13 +8,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Get all vehicles
   app.get("/api/vehicles", async (req, res) => {
-    try {
-      const vehicles = await storage.getVehicles();
-      res.json(vehicles);
-    } catch ($e) {
-      console.error("Error fetching vehicles:", $e.message);
-      res.status(500).json($e);
-    }
+    const vehicles = await storage.getVehicles();
+    res.json(vehicles);
   });
 
   // Get single vehicle
