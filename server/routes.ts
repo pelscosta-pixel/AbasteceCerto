@@ -12,7 +12,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const vehicles = await storage.getVehicles();
       res.json(vehicles);
     } catch (error) {
-      console.error("Error fetching vehicles:", error);
+      console.error("Error fetching vehicles:", error.message);
       res.status(500).json({ error: "Failed to fetch vehicles" });
     }
   });
