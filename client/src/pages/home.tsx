@@ -23,21 +23,22 @@ export default function Home() {
   const { toast } = useToast();
 
   const createMutation = useMutation({
-    mutationFn: async (data: VehicleData) => {
-      const response = await fetch('/api/vehicles', {
+    mutationFn: (data: VehicleData) => 
+      fetch('/api/vehicles', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data)
-      });
-      if (!response.ok) throw new Error('Failed to create vehicle');
-      return response.json();
-    },
-    onSuccess: (newVehicle) => {
+        body: JSON.stringify(data),
+      }).then(res => res.json()),
+    onSuccess: () => {
+      // Invalidate both possible cache keys
+      queryClient.invalidateQueries({ queryKey: ['vehicles'] });
       queryClient.invalidateQueries({ queryKey: ['/api/vehicles'] });
-      setSelectedVehicle(newVehicle);
-      setAppState('calculator');
-      toast({ title: "Veículo criado com sucesso!" });
-    }
+      setAppState('welcome');
+      toast({
+        title: "Sucesso!",
+        description: "Veículo salvo com sucesso.",
+      });
+    },
   });
 
   const updateMutation = useMutation({

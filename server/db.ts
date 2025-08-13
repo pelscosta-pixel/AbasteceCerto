@@ -15,7 +15,9 @@ console.log("Connecting to database...");
 export const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 export const db = drizzle({ client: pool, schema });
 
-// Test the connection
-pool.connect()
-  .then(() => console.log("Database connected successfully"))
-  .catch((error) => console.error("Database connection failed:", error));
+// Test the connection only in development
+if (process.env.NODE_ENV === "development") {
+  pool.connect()
+    .then(() => console.log("Database connected successfully"))
+    .catch((error) => console.error("Database connection failed:", error));
+}

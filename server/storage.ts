@@ -24,29 +24,46 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getVehicle(id: number): Promise<Vehicle | undefined> {
-    const [vehicle] = await db.select().from(vehicles).where(eq(vehicles.id, id));
-    return vehicle || undefined;
+    try {
+      const [vehicle] = await db.select().from(vehicles).where(eq(vehicles.id, id));
+      return vehicle || undefined;
+    } catch (error) {
+      console.error("Database error in getVehicle:", error);
+      throw error;
+    }
   }
 
-  async createVehicle(insertVehicle: InsertVehicle): Promise<Vehicle> {
-    const [vehicle] = await db
-      .insert(vehicles)
-      .values(insertVehicle)
-      .returning();
-    return vehicle;
+  async createVehicle(vehicleData: Omit<Vehicle, 'id' | 'createdAt'>): Promise<Vehicle> {
+    try {
+      const [vehicle] = await db.insert(vehicles).values(vehicleData).returning();
+      console.log("Vehicle created:", vehicle);
+      return vehicle;
+    } catch (error) {
+      console.error("Database error in createVehicle:", error);
+      throw error;
+    }
   }
 
-  async updateVehicle(id: number, insertVehicle: InsertVehicle): Promise<Vehicle> {
-    const [vehicle] = await db
-      .update(vehicles)
-      .set(insertVehicle)
-      .where(eq(vehicles.id, id))
-      .returning();
-    return vehicle;
+  async updateVehicle(id: number, vehicleData: Partial<Omit<Vehicle, 'id' | 'createdAt'>>): Promise<Vehicle | undefined> {
+    try {
+      const [vehicle] = await db.update(vehicles)
+        .set(vehicleData)
+        .where(eq(vehicles.id, id))
+        .returning();
+      return vehicle;
+    } catch (error) {
+      console.error("Database error in updateVehicle:", error);
+      throw error;
+    }
   }
 
   async deleteVehicle(id: number): Promise<void> {
-    await db.delete(vehicles).where(eq(vehicles.id, id));
+    try {
+      await db.delete(vehicles).where(eq(vehicles.id, id));
+    } catch (error) {
+      console.error("Database error in deleteVehicle:", error);
+      throw error;
+    }
   }
 }
 
