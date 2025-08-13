@@ -7,6 +7,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { vehicleDataSchema, type VehicleData, type Vehicle } from "@shared/schema";
 import { Car, Gauge, Leaf, Fuel, X, Save } from "lucide-react";
+import { useEffect } from "react";
 
 interface VehicleSetupProps {
   isVisible: boolean;
@@ -19,13 +20,31 @@ interface VehicleSetupProps {
 export function VehicleSetup({ isVisible, onClose, onSave, initialData, isEditing }: VehicleSetupProps) {
   const form = useForm<VehicleData>({
     resolver: zodResolver(vehicleDataSchema),
-    defaultValues: initialData || {
+    defaultValues: {
       nome: "",
       gasolinaConsumo: 0,
       etanolConsumo: 0,
       capacidadeTanque: 0,
     },
   });
+
+  useEffect(() => {
+    if (initialData) {
+      form.reset({
+        nome: initialData.nome,
+        gasolinaConsumo: initialData.gasolinaConsumo,
+        etanolConsumo: initialData.etanolConsumo,
+        capacidadeTanque: initialData.capacidadeTanque,
+      });
+    } else {
+      form.reset({
+        nome: "",
+        gasolinaConsumo: 0,
+        etanolConsumo: 0,
+        capacidadeTanque: 0,
+      });
+    }
+  }, [initialData, form]);
 
   const handleSubmit = (data: VehicleData) => {
     onSave(data);
