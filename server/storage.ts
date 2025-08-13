@@ -12,7 +12,15 @@ export interface IStorage {
 
 export class DatabaseStorage implements IStorage {
   async getVehicles(): Promise<Vehicle[]> {
-    return db.select().from(vehicles).orderBy(vehicles.createdAt);
+    try {
+      console.log("Fetching vehicles from database...");
+      const result = await db.select().from(vehicles).orderBy(vehicles.createdAt);
+      console.log(`Found ${result.length} vehicles`);
+      return result;
+    } catch (error) {
+      console.error("Database error in getVehicles:", error);
+      throw error;
+    }
   }
 
   async getVehicle(id: number): Promise<Vehicle | undefined> {
