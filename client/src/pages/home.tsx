@@ -18,7 +18,7 @@ export default function Home() {
   const [appState, setAppState] = useState<AppState>('welcome');
   const [calculationResult, setCalculationResult] = useState<CalculationResult | null>(null);
   const [editingVehicle, setEditingVehicle] = useState<Vehicle | null>(null);
-  
+
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
