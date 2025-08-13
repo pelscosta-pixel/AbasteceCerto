@@ -9,7 +9,7 @@ import { type Vehicle, type VehicleData, type CalculationResult } from "@shared/
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { Car, Fuel, Settings, Plus, Edit } from "lucide-react";
+import { Car, Fuel, Plus, Edit } from "lucide-react";
 
 type AppState = 'welcome' | 'setup' | 'calculator' | 'result';
 
@@ -100,22 +100,9 @@ export default function Home() {
     <div className="max-w-md mx-auto bg-surface min-h-screen">
       {/* Header */}
       <header className="bg-primary text-white p-4 elevation-2">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <Fuel size={24} />
-            <h1 className="text-xl font-medium">Combustível Inteligente</h1>
-          </div>
-          {selectedVehicle && appState !== 'setup' && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => handleEditVehicle(selectedVehicle)}
-              className="p-2 rounded-full hover:bg-white hover:bg-opacity-20 transition-colors text-white"
-              data-testid="button-settings"
-            >
-              <Settings size={18} />
-            </Button>
-          )}
+        <div className="flex items-center space-x-3">
+          <Fuel size={24} />
+          <h1 className="text-xl font-medium">Combustível Inteligente</h1>
         </div>
       </header>
 
