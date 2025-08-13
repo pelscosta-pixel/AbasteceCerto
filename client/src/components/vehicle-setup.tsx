@@ -96,7 +96,15 @@ export function VehicleSetup({ isVisible, onClose, onSave, initialData, isEditin
                       min="1"
                       max="50"
                       className="text-lg py-3"
-                      onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        const numericValue = parseFloat(value) || 0;
+                        field.onChange(numericValue);
+                        // Update the display value to remove leading zeros
+                        if (value && !isNaN(numericValue)) {
+                          e.target.value = numericValue.toString();
+                        }
+                      }}
                       data-testid="input-gasolina-consumo"
                     />
                   </FormControl>
@@ -123,7 +131,15 @@ export function VehicleSetup({ isVisible, onClose, onSave, initialData, isEditin
                       min="1"
                       max="50"
                       className="text-lg py-3"
-                      onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        const numericValue = parseFloat(value) || 0;
+                        field.onChange(numericValue);
+                        // Update the display value to remove leading zeros
+                        if (value && !isNaN(numericValue)) {
+                          e.target.value = numericValue.toString();
+                        }
+                      }}
                       data-testid="input-etanol-consumo"
                     />
                   </FormControl>
@@ -150,7 +166,15 @@ export function VehicleSetup({ isVisible, onClose, onSave, initialData, isEditin
                       min="10"
                       max="200"
                       className="text-lg py-3"
-                      onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        const numericValue = parseFloat(value) || 0;
+                        field.onChange(numericValue);
+                        // Update the display value to remove leading zeros
+                        if (value && !isNaN(numericValue)) {
+                          e.target.value = numericValue.toString();
+                        }
+                      }}
                       data-testid="input-capacidade-tanque"
                     />
                   </FormControl>

@@ -24,19 +24,19 @@ export function PriceCalculator({ vehicleData, onCalculate }: PriceCalculatorPro
   const calculateBestFuel = (prices: PriceInput): CalculationResult => {
     const gasolinaCostPerKm = prices.precoGasolina / vehicleData.gasolinaConsumo;
     const etanolCostPerKm = prices.precoEtanol / vehicleData.etanolConsumo;
-    
+
     const bestFuel = etanolCostPerKm < gasolinaCostPerKm ? 'etanol' : 'gasolina';
     const savingsPerKm = Math.abs(gasolinaCostPerKm - etanolCostPerKm);
-    
+
     // Calculate savings per full tank based on average consumption
     const avgConsumption = bestFuel === 'etanol' ? vehicleData.etanolConsumo : vehicleData.gasolinaConsumo;
     const kmPerTank = vehicleData.capacidadeTanque * avgConsumption;
     const savingsPerTank = savingsPerKm * kmPerTank;
-    
+
     const maxCost = Math.max(gasolinaCostPerKm, etanolCostPerKm);
     const minCost = Math.min(gasolinaCostPerKm, etanolCostPerKm);
     const percentageDifference = ((maxCost - minCost) / maxCost) * 100;
-    
+
     return {
       bestFuel,
       gasolinaCostPerKm,
@@ -81,7 +81,15 @@ export function PriceCalculator({ vehicleData, onCalculate }: PriceCalculatorPro
                         min="0.01"
                         max="20"
                         className="text-lg py-3 text-center"
-                        onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          const numericValue = parseFloat(value) || 0;
+                          field.onChange(numericValue);
+                          // Update the display value to remove leading zeros
+                          if (value && !isNaN(numericValue)) {
+                            e.target.value = numericValue.toString();
+                          }
+                        }}
                         data-testid="input-preco-gasolina"
                       />
                     </FormControl>
@@ -108,7 +116,15 @@ export function PriceCalculator({ vehicleData, onCalculate }: PriceCalculatorPro
                         min="0.01"
                         max="20"
                         className="text-lg py-3 text-center"
-                        onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          const numericValue = parseFloat(value) || 0;
+                          field.onChange(numericValue);
+                          // Update the display value to remove leading zeros
+                          if (value && !isNaN(numericValue)) {
+                            e.target.value = numericValue.toString();
+                          }
+                        }}
                         data-testid="input-preco-etanol"
                       />
                     </FormControl>
